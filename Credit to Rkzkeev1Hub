@@ -1,0 +1,210 @@
+-- Create ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "RkzkeeHub"
+gui.ResetOnSpawn = false
+gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Rainbow Effect for GUI
+local function createRainbowEffect(frame)
+    local hue = 0
+    game:GetService("RunService").RenderStepped:Connect(function()
+        hue = (hue + 0.01) % 1
+        frame.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
+    end)
+end
+
+-- Main Frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0.3, 0, 0.6, 0) -- Increased height to fit ESP toggles
+frame.Position = UDim2.new(0.35, 0, 0.3, 0)
+frame.BackgroundTransparency = 0.2
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+createRainbowEffect(frame)
+
+-- Title Label
+local title = Instance.new("TextLabel")
+title.Text = "RkzkeeHub"
+title.Size = UDim2.new(1, 0, 0.2, 0)
+title.BackgroundTransparency = 1
+title.TextScaled = true
+title.Font = Enum.Font.FredokaOne
+title.TextColor3 = Color3.new(1, 1, 1)
+title.Parent = frame
+
+-- Toggle Aim Assist Button
+local aimToggleButton = Instance.new("TextButton")
+aimToggleButton.Text = "Aim Assist: OFF"
+aimToggleButton.Size = UDim2.new(0.8, 0, 0.1, 0)
+aimToggleButton.Position = UDim2.new(0.1, 0, 0.2, 0)
+aimToggleButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+aimToggleButton.TextScaled = true
+aimToggleButton.Font = Enum.Font.Gotham
+aimToggleButton.TextColor3 = Color3.new(1, 1, 1)
+aimToggleButton.Parent = frame
+
+-- Toggle Wall Check
+local wallCheckButton = Instance.new("TextButton")
+wallCheckButton.Text = "Wall Check: ON"
+wallCheckButton.Size = UDim2.new(0.8, 0, 0.1, 0)
+wallCheckButton.Position = UDim2.new(0.1, 0, 0.35, 0)
+wallCheckButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+wallCheckButton.TextScaled = true
+wallCheckButton.Font = Enum.Font.Gotham
+wallCheckButton.TextColor3 = Color3.new(1, 1, 1)
+wallCheckButton.Parent = frame
+
+-- Toggle Team Check
+local teamCheckButton = Instance.new("TextButton")
+teamCheckButton.Text = "Team Check: ON"
+teamCheckButton.Size = UDim2.new(0.8, 0, 0.1, 0)
+teamCheckButton.Position = UDim2.new(0.1, 0, 0.5, 0)
+teamCheckButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+teamCheckButton.TextScaled = true
+teamCheckButton.Font = Enum.Font.Gotham
+teamCheckButton.TextColor3 = Color3.new(1, 1, 1)
+teamCheckButton.Parent = frame
+
+-- Toggle ESP All Players
+local espAllButton = Instance.new("TextButton")
+espAllButton.Text = "ESP All Players: OFF"
+espAllButton.Size = UDim2.new(0.8, 0, 0.1, 0)
+espAllButton.Position = UDim2.new(0.1, 0, 0.65, 0)
+espAllButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+espAllButton.TextScaled = true
+espAllButton.Font = Enum.Font.Gotham
+espAllButton.TextColor3 = Color3.new(1, 1, 1)
+espAllButton.Parent = frame
+
+-- Toggle ESP Team & Enemies
+local espTeamButton = Instance.new("TextButton")
+espTeamButton.Text = "ESP Team & Enemies: OFF"
+espTeamButton.Size = UDim2.new(0.8, 0, 0.1, 0)
+espTeamButton.Position = UDim2.new(0.1, 0, 0.8, 0)
+espTeamButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+espTeamButton.TextScaled = true
+espTeamButton.Font = Enum.Font.Gotham
+espTeamButton.TextColor3 = Color3.new(1, 1, 1)
+espTeamButton.Parent = frame
+
+-- Status Variables
+local espAllEnabled = false
+local espTeamEnabled = false
+
+-- Remove Existing ESP
+local function clearESP()
+    for _, v in pairs(game.Workspace:GetDescendants()) do
+        if v:IsA("BillboardGui") or v:IsA("BoxHandleAdornment") then
+            v:Destroy()
+        end
+    end
+end
+
+-- Create ESP for a Player
+local function createESP(player, isTeamCheck)
+    if player == game.Players.LocalPlayer then return end
+    if isTeamCheck and not isEnemy(player) then return end
+
+    local character = player.Character
+    if character and character:FindFirstChild("Head") and character:FindFirstChild("Humanoid") then
+        local head = character.Head
+        local humanoid = character.Humanoid
+
+        -- Box ESP
+        local box = Instance.new("BoxHandleAdornment")
+        box.Size = Vector3.new(4, 7, 4)
+        box.Color3 = isTeamCheck and (player.Team == game.Players.LocalPlayer.Team and Color3.new(0, 1, 0) or Color3.new(1, 0, 0)) or Color3.new(1, 1, 1)
+        box.Transparency = 0.5
+        box.Adornee = character
+        box.AlwaysOnTop = true
+        box.Parent = character
+
+        -- Health Bar
+        local billboard = Instance.new("BillboardGui")
+        billboard.Size = UDim2.new(2, 0, 0.5, 0)
+        billboard.Adornee = head
+        billboard.AlwaysOnTop = true
+        billboard.Parent = character
+
+        local healthBar = Instance.new("Frame")
+        healthBar.Size = UDim2.new(1, 0, 1, 0)
+        healthBar.BackgroundColor3 = Color3.new(1, 0, 0)
+        healthBar.BorderSizePixel = 0
+        healthBar.Parent = billboard
+
+        local healthBarFill = Instance.new("Frame")
+        healthBarFill.Size = UDim2.new(humanoid.Health / humanoid.MaxHealth, 0, 1, 0)
+        healthBarFill.BackgroundColor3 = Color3.new(0, 1, 0)
+        healthBarFill.BorderSizePixel = 0
+        healthBarFill.Parent = healthBar
+
+        -- Update Health Bar Dynamically
+        humanoid:GetPropertyChangedSignal("Health"):Connect(function()
+            if humanoid.Health > 0 then
+                healthBarFill.Size = UDim2.new(humanoid.Health / humanoid.MaxHealth, 0, 1, 0)
+            else
+                billboard:Destroy()
+                box:Destroy()
+            end
+        end)
+    end
+end
+
+-- Update ESP (All Players)
+local function updateESPAll()
+    clearESP()
+    for _, player in pairs(game.Players:GetPlayers()) do
+        createESP(player, false)
+    end
+end
+
+-- Update ESP (Team & Enemies)
+local function updateESPTeam()
+    clearESP()
+    for _, player in pairs(game.Players:GetPlayers()) do
+        createESP(player, true)
+    end
+end
+
+-- Toggle ESP All Players
+espAllButton.MouseButton1Click:Connect(function()
+    espAllEnabled = not espAllEnabled
+    espAllButton.Text = "ESP All Players: " .. (espAllEnabled and "ON" or "OFF")
+    if espAllEnabled then
+        espTeamEnabled = false
+        espTeamButton.Text = "ESP Team & Enemies: OFF"
+        updateESPAll()
+    else
+        clearESP()
+    end
+end)
+
+-- Toggle ESP Team & Enemies
+espTeamButton.MouseButton1Click:Connect(function()
+    espTeamEnabled = not espTeamEnabled
+    espTeamButton.Text = "ESP Team & Enemies: " .. (espTeamEnabled and "ON" or "OFF")
+    if espTeamEnabled then
+        espAllEnabled = false
+        espAllButton.Text = "ESP All Players: OFF"
+        updateESPTeam()
+    else
+        clearESP()
+    end
+end)
+
+-- Monitor ESP
+game:GetService("RunService").RenderStepped:Connect(function()
+    if espAllEnabled then
+        updateESPAll()
+    elseif espTeamEnabled then
+        updateESPTeam()
+    end
+end)
+
+-- Notify Player
+game.StarterGui:SetCore("SendNotification", {
+    Title = "RkzkeeHub",
+    Text = "ESP and Aim Assist Initialized",
+    Duration = 5
+})
